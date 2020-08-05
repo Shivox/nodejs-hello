@@ -1,0 +1,20 @@
+{
+  "name": "nodejs-hello",
+  "version": "1.0.0",
+  "description": "PPro Challenge Nodejs App",
+  "main": "app.js",
+  "dependencies": {
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Chihab Eddine Djaidja <chihab.djaidja@gmail.com>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shivox/nodejs-hello.git"
+  }
+}
