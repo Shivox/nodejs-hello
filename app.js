@@ -1,4 +1,5 @@
-const http = require('http');
+const express = require('express');
+const app = express();
 const mysql = require('mysql');
 
 const hostname = '0.0.0.0';
@@ -16,19 +17,20 @@ const connection = mysql.createConnection({
     database: dbName
 });
 
+// Connect to MySQL server
 connection.connect((err) => {
     if (err) throw err;
     console.log('Connected to MySQL Server!');
 });
 
-//connection.query('');
 
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello World');
+app.get("/",(req,res) => {
+    connection.query('SELECT * from data LIMIT 1', (err, rows) => {
+        if(err) throw err;
+        res.send(rows[0]['value']);
+    });
 });
 
-server.listen(port, hostname, () => {
+app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`);
 });
