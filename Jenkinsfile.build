@@ -1,56 +1,77 @@
-node("master") {
-    stage("Checking out codebase") {
-        checkout scm
-        config = readProperties file: 'Jenkinsfile.configuration'
-    }
+def label = "docker-${UUID.randomUUID().toString()}"
 
-    codeBuild(
-        imageName: "${config.image_name}",
-        imageVersion: "${config.image_version}",
-        imageRegistry: "${config.image_registry}",
-        dockerFile: "${config.dockerfile_path}"
-    )
-
-    publishImage(
-        imageName: "${config.image_name}",
-        imageVersion: "${config.image_version}",
-        imageRegistry: "${config.image_registry}",
-        imageSecret: "${config.image_secret}",
-        imageUser: "${config.image_user}",
-        imageRegistryURL: "${config.image_registry_url}"
-    )
-}
-
-def codeBuild(Map stepParams) {
-    try {
-        stage("Building image for code") {
-            def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
-            def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
-            sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
+podTemplate(label: label, yaml: """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:1.11
+    command: ['cat']
+    tty: true
+    volumeMounts:
+    - name: dockersock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: dockersock
+    hostPath:
+      path: /var/run/docker.sock
+"""
+  ) {
+      node(label) {
+        stage("Checking out codebase") {
+            checkout scm
+            config = readProperties file: 'Jenkinsfile.configuration'
         }
-    } catch (Exception e) {
-        echo "There is an error while building image. Please check the logs!!!!"
-        echo e.toString()
-        throw e
-    }
-}
 
-def publishImage(Map stepParams) {
-    try {
-        stage("Publishing docker image to registry") {
-            withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
+        codeBuild(
+            imageName: "${config.image_name}",
+            imageVersion: "${config.image_version}",
+            imageRegistry: "${config.image_registry}",
+            dockerFile: "${config.dockerfile_path}"
+        )
+
+        publishImage(
+            imageName: "${config.image_name}",
+            imageVersion: "${config.image_version}",
+            imageRegistry: "${config.image_registry}",
+            imageSecret: "${config.image_secret}",
+            imageUser: "${config.image_user}",
+            imageRegistryURL: "${config.image_registry_url}"
+        )
+    }
+
+    def codeBuild(Map stepParams) {
+        try {
+            stage("Building image for code") {
                 def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
                 def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
-                sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
-                sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
-                sh "docker push ${stepParams.imageRegistry}/${imageName}:${imageTag}"
-                sh "docker push ${stepParams.imageRegistry}/${imageName}:latest"
-                sh "docker rmi -f ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
-            }   
+                sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
+            }
+        } catch (Exception e) {
+            echo "There is an error while building image. Please check the logs!!!!"
+            echo e.toString()
+            throw e
         }
-    } catch (Exception e) {
-        echo "Unable to push the image ${imageName}. Please check logs!!!!"
-        echo e.toString()
-        throw e
+    }
+
+    def publishImage(Map stepParams) {
+        try {
+            stage("Publishing docker image to registry") {
+                withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
+                    def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+                    def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
+                    sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
+                    sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+                    sh "docker push ${stepParams.imageRegistry}/${imageName}:${imageTag}"
+                    sh "docker push ${stepParams.imageRegistry}/${imageName}:latest"
+                    sh "docker rmi -f ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+                }   
+            }
+        } catch (Exception e) {
+            echo "Unable to push the image ${imageName}. Please check logs!!!!"
+            echo e.toString()
+            throw e
+        }
     }
 }
