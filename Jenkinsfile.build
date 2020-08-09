@@ -33,21 +33,30 @@ def publishImage(Map stepParams) {
 }
 
 pipeline {
-    agent kubernetes
+    agent {
+        kubernetes {
+            label jenkins-docker        
+        }
+    }
     stages {
         stage("Checking out codebase") {
-            checkout scm
-            config = readProperties file: 'Jenkinsfile.configuration'
+            steps {
+                checkout scm
+                config = readProperties file: 'Jenkinsfile.configuration'
+            }
         }
         stage("Building docker image") {
-            container('docker') {
+            steps {
                 codeBuild(
                     imageName: "${config.image_name}",
                     imageVersion: "${config.image_version}",
                     imageRegistry: "${config.image_registry}",
                     dockerFile: "${config.dockerfile_path}"
                 )
-
+            }                
+        }
+        stage("Publishing Docker image") {
+            steps {
                 publishImage(
                     imageName: "${config.image_name}",
                     imageVersion: "${config.image_version}",
@@ -58,6 +67,5 @@ pipeline {
                 )
             }
         }
-        
     }
 }
