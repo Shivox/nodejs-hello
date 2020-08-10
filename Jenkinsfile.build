@@ -7,8 +7,10 @@ pipeline {
     stages {
         stage("Checking out codebase") {
             steps {
-                checkout scm
-                loadProperties();
+                script {
+                    checkout scm
+                    config = readProperties file: 'Jenkinsfile.configuration'
+                }
             }
         }
         stage("Building docker image") {
@@ -21,7 +23,6 @@ pipeline {
                         dockerFile: "${config.dockerfile_path}"
                     )
                 }
-                
             }                
         }
         stage("Publishing Docker image") {
@@ -76,7 +77,3 @@ def publishImage(Map stepParams) {
 }
 
 config = null
-
-def loadProperties() {
-    config = readProperties file: 'Jenkinsfile.configuration'
-}
