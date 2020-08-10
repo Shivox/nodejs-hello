@@ -34,6 +34,10 @@ def publishImage(Map stepParams) {
 
 config = null
 
+def loadProperties() {
+    config = readProperties file: 'Jenkinsfile.configuration'
+}
+
 pipeline {
     agent {
         kubernetes {
@@ -43,10 +47,8 @@ pipeline {
     stages {
         stage("Checking out codebase") {
             steps {
-                script {
-                    checkout scm
-                    config = readProperties file: 'Jenkinsfile.configuration'
-                }
+                checkout scm
+                 loadProperties();
             }
         }
         stage("Building docker image") {
