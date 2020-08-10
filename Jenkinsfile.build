@@ -12,7 +12,7 @@ metadata:
 spec:
   containers:
   - name: docker
-    image: docker:19-dind
+    image: docker:19-dind-rootless
     command:
     - cat
     tty: true
