@@ -1,37 +1,80 @@
 pipeline {
     agent {
-        kubernetes {
-            label jenkins-docker        
-        }
+        kubernetes
     }
     stages {
         stage("Checking out codebase") {
             steps {
                 checkout scm
-                 loadProperties();
+                loadProperties();
             }
         }
         stage("Building docker image") {
             steps {
-                codeBuild(
-                    imageName: "${config.image_name}",
-                    imageVersion: "${config.image_version}",
-                    imageRegistry: "${config.image_registry}",
-                    dockerFile: "${config.dockerfile_path}"
-                )
+                container("docker") {
+                    codeBuild(
+                        imageName: "${config.image_name}",
+                        imageVersion: "${config.image_version}",
+                        imageRegistry: "${config.image_registry}",
+                        dockerFile: "${config.dockerfile_path}"
+                    )
+                }
+                
             }                
         }
         stage("Publishing Docker image") {
             steps {
-                publishImage(
-                    imageName: "${config.image_name}",
-                    imageVersion: "${config.image_version}",
-                    imageRegistry: "${config.image_registry}",
-                    imageSecret: "${config.image_secret}",
-                    imageUser: "${config.image_user}",
-                    imageRegistryURL: "${config.image_registry_url}"
-                )
+                container("docker") {
+                    publishImage(
+                        imageName: "${config.image_name}",
+                        imageVersion: "${config.image_version}",
+                        imageRegistry: "${config.image_registry}",
+                        imageSecret: "${config.image_secret}",
+                        imageUser: "${config.image_user}",
+                        imageRegistryURL: "${config.image_registry_url}"
+                    )
+                }
             }
         }
     }
+}
+
+def codeBuild(Map stepParams) {
+    try {
+        stage("Building image for code") {
+            def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+            def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
+            sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
+        }
+    } catch (Exception e) {
+        echo "There is an error while building image. Please check the logs!!!!"
+        echo e.toString()
+        throw e
+    }
+}
+
+def publishImage(Map stepParams) {
+    try {
+        stage("Publishing docker image to registry") {
+            withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
+                def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+                def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
+                sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
+                sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+                sh "docker push ${stepParams.imageRegistry}/${imageName}:${imageTag}"
+                sh "docker push ${stepParams.imageRegistry}/${imageName}:latest"
+                sh "docker rmi -f ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+            }   
+        }
+    } catch (Exception e) {
+        echo "Unable to push the image ${imageName}. Please check logs!!!!"
+        echo e.toString()
+        throw e
+    }
+}
+
+config = null
+
+def loadProperties() {
+    config = readProperties file: 'Jenkinsfile.configuration'
 }
