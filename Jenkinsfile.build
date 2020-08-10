@@ -1,6 +1,8 @@
 pipeline {
     agent {
-        kubernetes {}
+        kubernetes {
+            defaultContainer 'docker'
+        }
     }
     stages {
         stage("Checking out codebase") {
