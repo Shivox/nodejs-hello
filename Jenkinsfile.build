@@ -1,7 +1,8 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'docker'
+            label "jenkins-agent"
+            defaultContainer "docker"
         }
     }
     stages {
