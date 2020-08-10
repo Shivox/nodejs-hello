@@ -32,6 +32,8 @@ def publishImage(Map stepParams) {
     }
 }
 
+config = null
+
 pipeline {
     agent {
         kubernetes {
