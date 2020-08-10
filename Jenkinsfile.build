@@ -3,6 +3,20 @@ pipeline {
         kubernetes {
             label "jenkins-agent"
             defaultContainer "docker"
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkins-agent: agent
+spec:
+  containers:
+  - name: docker
+    image: docker:19
+    command:
+    - cat
+    tty: true
+"""
         }
     }
     stages {
