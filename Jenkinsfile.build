@@ -18,8 +18,6 @@ spec:
       value: tcp://localhost:2375
     securityContext:
       privileged: true
-    command:
-    - cat
     tty: true
     volumeMounts:
       - name: dind-storage
