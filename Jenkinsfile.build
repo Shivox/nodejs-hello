@@ -12,7 +12,7 @@ metadata:
 spec:
   containers:
   - name: docker
-    image: docker:19
+    image: docker:19-dind
     command:
     - cat
     tty: true
