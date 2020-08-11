@@ -1,0 +1,61 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkins-agent: agent
+spec:
+  containers:
+    - name: helm
+      image: lachlanevenson/k8s-helm:v3.1.1
+      command:
+        - cat
+      tty: true
+"""
+        }
+    }
+    stages {
+        stage("Checking out codebase") {
+            steps {
+                checkout scm
+                config = readProperties file: 'Jenkinsfile.configuration'
+            }
+        }
+        stage("Linting helm chart for application") {
+            container("helm") {
+                lintHelmChart(
+                    helmChartDir: "${config.helm_chart_dir}"
+                )
+            }
+        }
+        stage("Appying helm chart app to k8s cluster") {
+            steps {
+                container("helm") {
+                    applyHelmChart(
+                        helmChartDir: "${config.helm_chart_dir}",
+                        applicationName: "${config.application_name}"
+                    )
+                }                
+            }    
+        }
+    }
+}
+
+def lintHelmChart(Map stepParams) {
+    dir("${stepParams.helmChartDir}") {
+        sh "helm lint ./"
+    }
+}
+
+def applyHelmChart(Map stepParams) {
+    stage("Setting up the GoWebApp application") {
+        dir("${stepParams.helmChartDir}") {
+            sh "helm upgrade ${stepParams.applicationName} ./ -f values.yaml --namespace go-webapp --install"
+        }
+    }
+}
+
+config = null
