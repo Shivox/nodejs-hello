@@ -25,11 +25,13 @@ spec:
             }
         }
         stage("Linting helm chart for application") {
-            container("helm") {
-                lintHelmChart(
-                    helmChartDir: "${config.helm_chart_dir}"
-                )
-            }
+            steps {
+                container("helm") {
+                    lintHelmChart(
+                        helmChartDir: "${config.helm_chart_dir}"
+                    )
+                }
+            }            
         }
         stage("Appying helm chart app to k8s cluster") {
             steps {
