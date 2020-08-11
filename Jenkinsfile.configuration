@@ -6,6 +6,6 @@ image_description          = PPRO Nodejs Hello World App
 image_registry             = shivox
 image_secret               = shivox-at-dockerhub
 image_user                 = shivox
-image_registry_url         = hub.docker.com
+image_registry_url         =
 dockerfile_path            = Dockerfile
 helm_chart_dir             = deployment/helm
