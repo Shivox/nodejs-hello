@@ -20,8 +20,10 @@ spec:
     stages {
         stage("Checking out codebase") {
             steps {
-                checkout scm
-                config = readProperties file: 'Jenkinsfile.configuration'
+                script {
+                    checkout scm
+                    config = readProperties file: 'Jenkinsfile.configuration'
+                }                
             }
         }
         stage("Linting helm chart for application") {
