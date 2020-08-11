@@ -55,9 +55,10 @@ def lintHelmChart(Map stepParams) {
 }
 
 def applyHelmChart(Map stepParams) {
-    stage("Setting up the GoWebApp application") {
+    stage("Setting up the Nodejs Hello application") {
         dir("${stepParams.helmChartDir}") {
-            sh "helm upgrade ${stepParams.applicationName} ./ -f values.yaml --namespace go-webapp --install"
+            sh "helm dependency update"
+            sh "helm upgrade ${stepParams.applicationName} ./ -f values.yaml --namespace default --install"
         }
     }
 }
