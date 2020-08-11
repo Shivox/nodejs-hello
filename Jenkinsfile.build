@@ -13,9 +13,6 @@ spec:
   containers:
   - name: docker
     image: docker:19-dind
-    env:
-    - name: DOCKER_HOST
-      value: tcp://localhost:2375
     securityContext:
       privileged: true
     tty: true
@@ -67,36 +64,24 @@ spec:
 }
 
 def codeBuild(Map stepParams) {
-    try {
-        stage("Building image for code") {
-            def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
-            def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
-            sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
-        }
-    } catch (Exception e) {
-        echo "There is an error while building image. Please check the logs!!!!"
-        echo e.toString()
-        throw e
+    stage("Building image for code") {
+        def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+        def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
+        sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
     }
 }
 
 def publishImage(Map stepParams) {
-    try {
-        stage("Publishing docker image to registry") {
-            withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
-                def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
-                def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
-                sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
-                sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
-                sh "docker push ${stepParams.imageRegistry}/${imageName}:${imageTag}"
-                sh "docker push ${stepParams.imageRegistry}/${imageName}:latest"
-                sh "docker rmi -f ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
-            }   
-        }
-    } catch (Exception e) {
-        echo "Unable to push the image ${imageName}. Please check logs!!!!"
-        echo e.toString()
-        throw e
+    stage("Publishing docker image to registry") {
+        withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
+            def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+            def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
+            sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
+            sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+            sh "docker push ${stepParams.imageRegistry}/${imageName}:${imageTag}"
+            sh "docker push ${stepParams.imageRegistry}/${imageName}:latest"
+            sh "docker rmi -f ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
+        }   
     }
 }
 
