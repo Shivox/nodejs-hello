@@ -65,7 +65,7 @@ spec:
 
 def codeBuild(Map stepParams) {
     stage("Building image for code") {
-        def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+        def imageName = "${stepParams.imageName}".replace(" ", "")
         def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
         sh "docker build -t ${stepParams.imageRegistry}/${imageName}:${imageTag} -f ${stepParams.dockerFile} ."
     }
@@ -74,7 +74,7 @@ def codeBuild(Map stepParams) {
 def publishImage(Map stepParams) {
     stage("Publishing docker image to registry") {
         withCredentials([string(credentialsId: "${stepParams.imageSecret}", variable: 'tokenid')]) {
-            def imageName = "${stepParams.imageName}-${env.BRANCH_NAME}".replace(" ", "")
+            def imageName = "${stepParams.imageName}".replace(" ", "")
             def imageTag = "${stepParams.imageVersion}-${env.BUILD_ID}".replace(" ", "")
             sh "docker login ${stepParams.imageRegistryURL} -u ${stepParams.imageUser} -p ${tokenid}"
             sh "docker tag ${stepParams.imageRegistry}/${imageName}:${imageTag} ${stepParams.imageRegistry}/${imageName}:latest"
