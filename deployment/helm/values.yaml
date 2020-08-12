@@ -20,7 +20,7 @@ serviceAccount:
   name: ""
 
 service:
-  type: NodePort
+  type: ClusterIP
   port: 8080
 
 ingress:
@@ -30,7 +30,7 @@ ingress:
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: nodejs-hello.ppro.dev
-      paths: []
+      paths: [/]
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -45,6 +45,7 @@ autoscaling:
 
 # Secret will be generated automatically by mysql chart
 mysql:
+  mysqlHostname: nodejs-hello-mysql.default.svc.ppro.dev
   mysqlUser: pprouser
   mysqlDatabase: pprodb
   initializationFiles:
