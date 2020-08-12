@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        kubernetes {
+        kubernetes-dev {
             yaml """
 apiVersion: v1
 kind: Pod
@@ -28,7 +28,7 @@ spec:
             steps {
                 script {
                     checkout scm
-                    config = readProperties file: 'Jenkinsfile.configuration'
+                    config = readProperties file: 'Jenkinsfile.config'
                 }
             }
         }

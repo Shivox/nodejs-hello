@@ -22,7 +22,7 @@ spec:
             steps {
                 script {
                     checkout scm
-                    config = readProperties file: 'Jenkinsfile.configuration'
+                    config = readProperties file: 'Jenkinsfile.config'
                 }                
             }
         }
