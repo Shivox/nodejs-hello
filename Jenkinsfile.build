@@ -20,7 +20,7 @@ spec:
         mountPath: /var/lib/docker
   volumes:
   - name: dind-storage
-    emptyDir: {}      
+    emptyDir: {}
 """
         }
     }
@@ -43,7 +43,7 @@ spec:
                         dockerFile: "${config.dockerfile_path}"
                     )
                 }
-            }                
+            }
         }
         stage("Publishing Docker image") {
             steps {

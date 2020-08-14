@@ -24,7 +24,7 @@ spec:
                 script {
                     checkout scm
                     config = readProperties file: 'Jenkinsfile.config'
-                }                
+                }
             }
         }
         stage("Linting helm chart for application") {
@@ -34,7 +34,7 @@ spec:
                         helmChartDir: "${config.helm_chart_dir}"
                     )
                 }
-            }            
+            }
         }
         stage("Appying helm chart app to k8s cluster") {
             steps {
@@ -43,8 +43,8 @@ spec:
                         helmChartDir: "${config.helm_chart_dir}",
                         applicationName: "${config.application_name}"
                     )
-                }                
-            }    
+                }
+            }
         }
     }
 }
@@ -59,7 +59,7 @@ def applyHelmChart(Map stepParams) {
     stage("Setting up the Nodejs Hello application") {
         dir("${stepParams.helmChartDir}") {
             sh "helm dependency update"
-            sh "helm upgrade ${stepParams.applicationName} ./ -f values.yaml --namespace default --install"
+            sh "helm upgrade ${stepParams.applicationName} ./ -f values-dev.yaml --namespace default --install"
         }
     }
 }

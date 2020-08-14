@@ -1,0 +1,54 @@
+# Default values for nodejs-hello.
+
+replicaCount: 1
+
+image:
+  repository: shivox/nodejs-hello
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: nodejs-hello.ppro.dev
+      paths: [/]
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Secret will be generated automatically by mysql chart
+mysql:
+  mysqlHostname: nodejs-hello-mysql.default.svc.ppro.dev
+  mysqlUser: pprouser
+  mysqlDatabase: pprodb
+  initializationFiles:
+    ppro-db.sql: |-
+      CREATE TABLE IF NOT EXISTS data (value VARCHAR(50));
+      INSERT INTO data (value) VALUES ("Hello, World! From Dev");
