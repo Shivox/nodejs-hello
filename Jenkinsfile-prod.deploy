@@ -51,7 +51,7 @@ spec:
 
 def lintHelmChart(Map stepParams) {
     dir("${stepParams.helmChartDir}") {
-        sh "helm lint ./"
+        sh "helm lint ./ -f values-prod.yaml"
     }
 }
 
