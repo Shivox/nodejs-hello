@@ -9,6 +9,7 @@ metadata:
   labels:
     jenkins-agent: agent
 spec:
+  serviceAccountName: helm
   containers:
     - name: helm
       image: lachlanevenson/k8s-helm:v3.1.1
